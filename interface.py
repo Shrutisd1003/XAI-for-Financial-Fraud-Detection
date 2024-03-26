@@ -87,19 +87,11 @@ timeofday = st.selectbox("Time of day", ['Morning', 'Afternoon', 'Night'])
 date = st.number_input("Date", format="%.0f")
 
 if st.button("Detect Fraud"):
-    # st.write("Transaction Type:", transaction_type)
-    # st.write("Amount:", amount)
-    # st.write("Origin's Old Balance:", origin_old_balance)
-    # st.write("Destination's New Balance:", destination_new_balance)
-
-    # Prepare input data for the model
     input_data = np.array([[type_encoding.get(transaction_type), branch_encoding.get(branch), amount, origin_old_balance, origin_new_balance, destination_old_balance, destination_new_balance, unusualLogin, accAge, acctype_encoding.get(acc_type), timeofday_encoding.get(timeofday), date]])
 
     if input_data is not None:
-        # Make prediction using the LSTM model
         prediction = model.predict(input_data)
 
-        # st.write("Fraud Detection Result:")
         if prediction > 0.5:
             st.write("Fraudulent transaction detected!")
         else:
@@ -162,7 +154,4 @@ if st.button("Detect Fraud"):
                     "shap_values": shap_values
                 })
 
-    # responses = llm.generate_content(prompt, stream=True)
-    # for response in responses:
-    #     st.write(response.text)
     st.write(response)

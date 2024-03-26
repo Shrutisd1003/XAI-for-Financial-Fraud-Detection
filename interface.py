@@ -3,16 +3,19 @@ from streamlit_shap import st_shap
 import numpy as np
 from xgboost import XGBClassifier
 import shap
-import streamlit.components.v1 as components
-import vertexai
-from vertexai.generative_models import GenerationConfig, GenerativeModel
 from dotenv import load_dotenv
 import os
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
 
 load_dotenv()
 
 model = XGBClassifier()
 model.load_model('xgb_final.json')
+
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+llm = ChatGoogleGenerativeAI(model="gemini-pro", convert_system_message_to_human=True)
 
 type_encoding = {'Cash In': 0, 'Cash Out': 1, 'Debit': 2, 'Payment': 3, 'Transfer': 4}
 acctype_encoding = {'Current': 0, 'Savings': 1}
@@ -83,13 +86,6 @@ acc_type = st.selectbox("Account Type", ['Current', 'Savings'])
 timeofday = st.selectbox("Time of day", ['Morning', 'Afternoon', 'Night'])
 date = st.number_input("Date", format="%.0f")
 
-PROJECT_ID = os.getenv("PROJECT_ID")
-LOCATION = os.getenv("LOCATION")
-
-vertexai.init(project=PROJECT_ID, location=LOCATION)
-
-llm = GenerativeModel("gemini-1.0-pro")
-
 if st.button("Detect Fraud"):
     # st.write("Transaction Type:", transaction_type)
     # st.write("Amount:", amount)
@@ -117,15 +113,56 @@ if st.button("Detect Fraud"):
     st_shap(shap.force_plot(explainer.expected_value, shap_values[0,:], input_data))
     st_shap(shap.plots.waterfall(explanation[0]), height=300)
 
-    prompt = f"""
-        you are an result-interpreter for a model that detects credit fruad detection.
-        the model takes 4 inputs transaction type, amount, origin old balance and destination new balance and returns 0 if not fraud else 1.
-        the model was given the following input : transaction type - {transaction_type}, amount - {amount}, origin old balance - {origin_old_balance}, destination new balance - {destination_new_balance} 
-        and gave the following output : {prediction}.
-        the SHAP values for all the features for the prediction was as follows : {shap_values} and the base value as : {explanation.base_values}.
-        Your job is to explain a person with non technical background the results of the model in simple language 
-    """
+    template = """
+        You are a fraud detection result interpreter, helping users understand the outcome of our credit fraud detection model in simple terms. Here's a breakdown of the analysis:
 
-    responses = llm.generate_content(prompt, stream=True)
-    for response in responses:
-        st.write(response.text)
+        The model evaluates transactions to determine if they are potentially fraudulent. It considers several factors, including the type of transaction, the amount involved, and the balances of the sender and recipient accounts. 
+
+        In the recent analysis, the model examined a transaction with the following details:
+        - Transaction Type: {transaction_type}
+        - Branch: {branch}
+        - Amount: {amount}
+        - Origin's Old Balance: {origin_old_balance}
+        - Origin's New Balance: {origin_new_balance}
+        - Destination's Old Balance: {destination_old_balance}
+        - Destination's New Balance: {destination_new_balance}
+        - Number of unusual logins: {unusualLogin}
+        - Account's age: {accAge}
+        - Account type: {acc_type}
+        - Time of day: {timeofday}
+        - Date: {date}
+
+        Based on this information, the model provided its prediction. If the prediction value is 0, it indicates that no fraudulent activity is detected. Conversely, if the prediction value is 1, it suggests that the transaction is potentially fraudulent.
+
+        Additionally, the model generates SHAP (SHapley Additive exPlanations) values to explain its decision-making process. These values indicate the impact of each feature on the prediction. A positive SHAP value suggests an increase in the likelihood of fraud, while a negative value indicates a decrease.
+
+        Here are the SHAP values for the features considered:
+        {shap_values}
+
+        The base value represents the model's average prediction across all observations. Understanding these SHAP values can provide insights into why the model made a particular prediction.
+
+        Your role is to communicate these findings in a clear and understandable manner, ensuring that individuals without a technical background grasp the implications of the model's analysis.
+        
+    """
+    prompt = ChatPromptTemplate.from_template(template)
+    chain = prompt | llm | StrOutputParser()
+    response = chain.invoke({
+                    "transaction_type": transaction_type, 
+                    "branch": branch,
+                    "amount": amount,
+                    "origin_old_balance": origin_old_balance,
+                    "origin_new_balance": origin_new_balance,
+                    "destination_old_balance": destination_old_balance,
+                    "destination_new_balance": destination_new_balance,
+                    "unusualLogin": unusualLogin,
+                    "accAge": accAge,
+                    "acc_type": acc_type,
+                    "timeofday": timeofday,
+                    "date": date,
+                    "shap_values": shap_values
+                })
+
+    # responses = llm.generate_content(prompt, stream=True)
+    # for response in responses:
+    #     st.write(response.text)
+    st.write(response)

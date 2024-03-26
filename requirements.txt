@@ -1,0 +1,12 @@
+streamlit
+streamlit_shap
+numpy
+xgboost
+shap
+python-dotenv
+google-cloud-aiplatform
+vertexai
+matplotlib
+langchain 
+langchain-openai 
+langchain-google-genai

@@ -90,7 +90,7 @@ if st.button("Detect Fraud"):
         - Time of day: {timeofday}
         - Date: {date}
 
-        Based on this information, the model provided its prediction. 
+        Based on this information, the model provided its prediction that is {prediction}. 
         If the prediction value is 0, it indicates that no fraudulent activity is detected. 
         Conversely, if the prediction value is 1, it suggests that the transaction is potentially fraudulent.
 
@@ -128,7 +128,8 @@ if st.button("Detect Fraud"):
                         "acc_type": acc_type,
                         "timeofday": timeofday,
                         "date": date,
-                        "shap_values": shap_values
+                        "shap_values": shap_values,
+                        "prediction": prediction
                     })
 
     if prediction > 0.5:

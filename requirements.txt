@@ -10,3 +10,7 @@ matplotlib
 langchain 
 langchain-openai 
 langchain-google-genai
+seaborn
+imblearn
+scikit-learn
+tensorflow

@@ -14,7 +14,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 load_dotenv()
 
-with open('xgb_final.pkl', 'rb') as f:
+with open('skf_random_forest.pkl', 'rb') as f:
     model = pickle.load(f)
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")

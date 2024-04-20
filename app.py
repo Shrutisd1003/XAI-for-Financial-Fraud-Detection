@@ -38,6 +38,7 @@ def main():
             # if transaction_id != "-Select-":
             #     print("explain button displayed")
             idx = transaction_ids.index(transaction_id)
+            print(f"index - {idx}")
             if st.button("Explain"):
                 print("explain button clicked")
                 response = generate_response(model, data, idx, prediction[idx])

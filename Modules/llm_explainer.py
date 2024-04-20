@@ -10,9 +10,9 @@ load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 llm = ChatGoogleGenerativeAI(model="gemini-pro", convert_system_message_to_human=True)
 
-def generate_response(data, transaction_id, prediction):
-    input_data = data.iloc[transaction_id,:]
-
+def generate_response(model, data, idx, prediction):
+    input_data = data.iloc[idx,:]
+    transaction_type, branch, amount, origin_old_balance, origin_new_balance, destination_old_balance, destination_new_balance, unusualLogin, accAge, acc_type, timeofday = input_data
     explainer = shap.TreeExplainer(model)
     explanation = explainer(input_data)
     shap_values = explanation.values
@@ -35,7 +35,6 @@ def generate_response(data, transaction_id, prediction):
         - Account's age: {accAge}
         - Account type: {acc_type}
         - Time of day: {timeofday}
-        - Date: {date}
 
         Based on this information, the model provided its prediction that is {prediction}. 
         If the prediction value is 0, it indicates that no fraudulent activity is detected. 
@@ -45,8 +44,7 @@ def generate_response(data, transaction_id, prediction):
         These values indicate the impact of each feature on the prediction. 
         A positive SHAP value suggests an increase in the likelihood of fraud, while a negative value indicates a decrease.
 
-        Here are the SHAP values for the features considered:
-        {shap_values}
+        Here are the SHAP values for the features considered: {shap_values}
 
         The base value represents the model's average prediction across all observations. 
         Understanding these SHAP values can provide insights into why the model made a particular prediction.
@@ -73,7 +71,6 @@ def generate_response(data, transaction_id, prediction):
                     "accAge": accAge,
                     "acc_type": acc_type,
                     "timeofday": timeofday,
-                    "date": date,
                     "shap_values": shap_values,
                     "prediction": prediction
                 })

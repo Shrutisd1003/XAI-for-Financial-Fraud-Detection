@@ -12,27 +12,38 @@ def load_model():
         model = pickle.load(f)
     return model
 
+@st.cache_data
+def load_and_clean_data(uploaded_file):
+    data = pd.read_csv(uploaded_file)
+    transaction_ids, modified_data = cleaned_data(data)
+    return transaction_ids, modified_data
+
 def main():
-    data = pd.DataFrame()
     uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-    if st.button("Predict"):
-        data = pd.read_csv(uploaded_file)
-        data = cleaned_data(data)
+    print("file uploader")
+    if uploaded_file:
+        transaction_ids, data = load_and_clean_data(uploaded_file)
+        print("data cleaned")
 
-        model = load_model()
-        prediction = model.predict(data).round().astype(int)
+        if st.button("Predict"):
+            print("predict clicked")
+            model = load_model()
+            prediction = model.predict(data).round().astype(int)
+            print("predictions made")
 
-        counts = np.bincount(prediction)
-        fig, ax = plt.subplots()
-        ax.pie(counts, labels=['Non-Fraud', 'Fraud'], autopct='%1.1f%%', startangle=90)
-        ax.axis('equal')
-        st.pyplot(fig)
+            transaction_ids = transaction_ids.tolist()
+            transaction_id = st.selectbox("Transaction IDs", transaction_ids)
+            print(f"transaction id - {transaction_id}")
 
-        transaction_ids_list = data.index.tolist()
-        transaction_id = st.selectbox("Transaction IDs", transaction_ids_list)
-        if st.button("Explain"):
-            response = generate_respone(data, transaction_id, prediction[transaction_ids_list.index(transaction_id)])
-            st.write(response)
-
+            # if transaction_id != "-Select-":
+            #     print("explain button displayed")
+            idx = transaction_ids.index(transaction_id)
+            if st.button("Explain"):
+                print("explain button clicked")
+                response = generate_response(model, data, idx, prediction[idx])
+                print("response generated")
+                st.write(response)
+    else:
+        st.write("Select a file")
 if __name__ == "__main__":
     main()

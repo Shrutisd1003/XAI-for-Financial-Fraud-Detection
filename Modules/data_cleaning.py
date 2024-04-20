@@ -1,13 +1,13 @@
-import numpy as np
 from Modules.load_encodings import get_encodings
 
 def cleaned_data(data):
     transaction_ids = data["Transaction ID"]
-    data.drop(columns=['Transaction ID', "Name Origin", "Name Destination", "isFlaggedFraud", "Date of Transaction"], inplace=True)
-    type_encoding, acctype_encoding, timeofday_encoding, branch_encoding = get_encodings()
+    data.drop(columns=['Transaction ID', "Name Origin", "isFlaggedFraud", "Date of Transaction"], inplace=True)
+    type_encoding, acctype_encoding, timeofday_encoding, branch_encoding, nameDest_encoding = get_encodings()
     data['Type'] = data['Type'].map(type_encoding)
     data['Account Type'] = data['Account Type'].map(acctype_encoding)
     data['Time of Day'] = data['Time of Day'].map(timeofday_encoding)
     data['Branch'] = data['Branch'].map(branch_encoding)
+    data['Name Destination'] = data['Name Destination'].str[0].map(nameDest_encoding)
 
     return transaction_ids, data

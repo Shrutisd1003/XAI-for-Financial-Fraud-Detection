@@ -12,7 +12,7 @@ llm = ChatGoogleGenerativeAI(model="gemini-pro", convert_system_message_to_human
 
 def generate_response(model, data, idx, prediction):
     input_data = data.iloc[idx,:]
-    transaction_type, branch, amount, origin_old_balance, origin_new_balance, destination_old_balance, destination_new_balance, unusualLogin, accAge, acc_type, timeofday = input_data
+    transaction_type, branch, amount, origin_old_balance, origin_new_balance, name_destination, destination_old_balance, destination_new_balance, unusualLogin, accAge, acc_type, timeofday = input_data
     explainer = shap.TreeExplainer(model)
     explanation = explainer(input_data)
     shap_values = explanation.values
@@ -29,6 +29,7 @@ def generate_response(model, data, idx, prediction):
         - Amount: {amount}
         - Origin's Old Balance: {origin_old_balance}
         - Origin's New Balance: {origin_new_balance}
+        - Name Destination: {name_destination}
         - Destination's Old Balance: {destination_old_balance}
         - Destination's New Balance: {destination_new_balance}
         - Number of unusual logins: {unusualLogin}
@@ -65,6 +66,7 @@ def generate_response(model, data, idx, prediction):
                     "amount": amount,
                     "origin_old_balance": origin_old_balance,
                     "origin_new_balance": origin_new_balance,
+                    "name_destination": name_destination,
                     "destination_old_balance": destination_old_balance,
                     "destination_new_balance": destination_new_balance,
                     "unusualLogin": unusualLogin,

@@ -1,0 +1,1 @@
+{'Customer': 0, 'Merchant': 1, 'Self': 2}

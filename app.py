@@ -32,13 +32,14 @@ def main():
     uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
     if uploaded_file:
         transaction_ids, modified_data = load_and_clean_data(uploaded_file)
+        st.write(modified_data)
         model = load_model()
         prediction = model.predict(modified_data).round().astype(int)
         
         original_data = pd.read_csv("original_data.csv")
         original_data = original_data.round(2)
         numeric_columns = original_data.select_dtypes(include=['float', 'int']).columns
-        original_data[numeric_columns] = original_data[numeric_columns].map('{:.2f}'.format)
+        # original_data[numeric_columns] = original_data[numeric_columns].map('{:.2f}'.format)
         original_data["Prediction"] = ["Fraud" if x == 1 else "Not Fraud" for x in prediction]
         st.dataframe(original_data.style.apply(color_coding, axis=1), hide_index=True)
         
@@ -61,7 +62,8 @@ def main():
                 try:
                     with st.spinner('Analyzing...'):
                         response = generate_response(model, modified_data, idx, prediction[idx])
-                        st.write_stream(stream_data(response))
+                        st.write(response)
+                        # st.write_stream(stream_data(response))
                 except Exception as e:
                     st.error(f"An error occurred: {e}")
     else:

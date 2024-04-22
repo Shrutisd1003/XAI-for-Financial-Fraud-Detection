@@ -13,13 +13,13 @@ llm = ChatGoogleGenerativeAI(model="gemini-pro", convert_system_message_to_human
 
 def generate_response(model, data, idx, prediction):
     input_data = data.iloc[idx,:]
-    transaction_type, branch, amount, origin_old_balance, origin_new_balance, name_destination, destination_old_balance, destination_new_balance, unusualLogin, accAge, acc_type, timeofday = input_data
+    transaction_type, branch, amount, origin_old_balance, origin_new_balance, destination_old_balance, destination_new_balance, receiver, unusualLogin, accAge, isOriginInconsistent, isDestinationInconsistent, acc_type, timeofday = input_data
     
     explainer = shap.TreeExplainer(model)
     explanation = explainer(input_data)
     shap_values = explanation.values
 
-    type_encoding, acctype_encoding, timeofday_encoding, branch_encoding, nameDest_encoding = get_encodings()
+    type_encoding, acctype_encoding, timeofday_encoding, branch_encoding, receiver_encoding = get_encodings()
 
     template = f"""
         You are a fraud detection result interpreter, helping users understand the outcome of our credit fraud detection model in simple terms. Here's a breakdown of the analysis:
@@ -33,11 +33,13 @@ def generate_response(model, data, idx, prediction):
         - Amount: {amount}
         - Origin's Old Balance: {origin_old_balance}
         - Origin's New Balance: {origin_new_balance}
-        - Name Destination: {list(nameDest_encoding.keys())[int(name_destination)]}
         - Destination's Old Balance: {destination_old_balance}
         - Destination's New Balance: {destination_new_balance}
+        - Receiver: {list(receiver_encoding.keys())[int(receiver)]}
         - Number of unusual logins: {unusualLogin}
         - Account's age: {accAge}
+        - Is Origin Account's balance inconsistent: {isOriginInconsistent}
+        - Is Destination Account's balance inconsistent: {isDestinationInconsistent}
         - Account type: {list(acctype_encoding.keys())[int(acc_type)]}
         - Time of day: {list(timeofday_encoding.keys())[int(timeofday)]}
 
@@ -70,12 +72,14 @@ def generate_response(model, data, idx, prediction):
                     "amount": amount,
                     "origin_old_balance": origin_old_balance,
                     "origin_new_balance": origin_new_balance,
-                    "name_destination": name_destination,
                     "destination_old_balance": destination_old_balance,
                     "destination_new_balance": destination_new_balance,
+                    "receiver": receiver,
                     "unusualLogin": unusualLogin,
                     "accAge": accAge,
                     "acc_type": acc_type,
+                    "isOriginInconsistent": isOriginInconsistent,
+                    "isDestinationInconsistent": isDestinationInconsistent,
                     "timeofday": timeofday,
                     "shap_values": shap_values,
                     "prediction": prediction

@@ -37,9 +37,11 @@ def main():
         prediction = model.predict(modified_data).round().astype(int)
         
         original_data = pd.read_csv("original_data.csv")
-        original_data = original_data.round(2)
-        numeric_columns = original_data.select_dtypes(include=['float', 'int']).columns
-        # original_data[numeric_columns] = original_data[numeric_columns].map('{:.2f}'.format)
+        # original_data = original_data.round(2)
+        # numeric_columns = original_data.select_dtypes(include=['float']).columns
+        # for column in numeric_columns:
+        #     original_data[column] = original_data[column].apply(lambda x: '{:.2f}'.format(x).rstrip('0').rstrip('.'))
+        # # original_data[numeric_columns] = original_data[numeric_columns].map('{:.2f}'.format)
         original_data["Prediction"] = ["Fraud" if x == 1 else "Not Fraud" for x in prediction]
         st.dataframe(original_data.style.apply(color_coding, axis=1), hide_index=True)
         

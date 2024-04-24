@@ -7,16 +7,14 @@ def read_encoding(file_path):
 def get_encodings():
     encodings = {}
 
-    encoding_files = ['type_encoding.txt', 'acctype_encoding.txt', 'timeofday_encoding.txt', 'branch_encoding.txt', 'receiver_encoding.txt']
+    encoding_files = ['branch_encoding.txt', 'sender_encoding.txt', 'receiver_encoding.txt']
 
     for file_name in encoding_files:
         key = file_name.split('_')[0] + '_encoding'
         encodings[key] = read_encoding(f'Model building/Encodings/{file_name}')
 
-    type_encoding = ast.literal_eval(encodings['type_encoding'])
-    acctype_encoding = ast.literal_eval(encodings['acctype_encoding'])
-    timeofday_encoding = ast.literal_eval(encodings['timeofday_encoding'])
     branch_encoding = ast.literal_eval(encodings['branch_encoding'])
+    sender_encoding = ast.literal_eval(encodings['sender_encoding'])
     receiver_encoding = ast.literal_eval(encodings['receiver_encoding'])
 
-    return type_encoding, acctype_encoding, timeofday_encoding, branch_encoding, receiver_encoding
+    return  branch_encoding, sender_encoding, receiver_encoding

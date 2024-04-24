@@ -47,7 +47,11 @@ def main():
     with left_padding:
         pass
     with middle:
-        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+        left, right = st.columns([2,1])
+        with left:
+            uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+        with right:
+            st_lottie(lottie_transaction, height=200, width=200, key="cash transaction")
         if uploaded_file:
             transaction_ids, modified_data = load_and_clean_data(uploaded_file)
             # st.write(modified_data)

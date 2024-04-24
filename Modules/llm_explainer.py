@@ -17,7 +17,7 @@ llm = ChatGoogleGenerativeAI(model="gemini-pro", convert_system_message_to_human
 def generate_response(model, data, idx, prediction):
     input_data = data.iloc[idx,:]
     branch, amount, sender, sender_old_balance, sender_new_balance, receiver, receiver_old_balance, receiver_new_balance, transaction_count, account_age, last_transaction = input_data
-    print(input_data)
+
     explainer = shap.TreeExplainer(model)
     explanation = explainer(input_data)
     shap_values = explanation.values

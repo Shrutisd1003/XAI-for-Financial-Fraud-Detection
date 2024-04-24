@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from streamlit_shap import st_shap
 from Modules.data_cleaning import cleaned_data
 from Modules.llm_explainer import generate_response
+from Modules.data_visualizer import DataVisualizer
 
 def load_model():
     with open('Model building/prediction_model.pkl', 'rb') as f:
@@ -40,52 +41,60 @@ def load_lottieurl(url):
 lottie_transaction = load_lottieurl("https://lottie.host/98295178-0a8f-4162-9a00-265d3f498cfd/SL87hpUcLF.json")
 
 def main():
-    left, right = st.columns([2,1])
-    with left:
+
+    st.set_page_config(layout="wide")
+    left_padding, middle, right_padding = st.columns([1,4,1])
+    with left_padding:
+        pass
+    with middle:
         uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-    with right:
-        st_lottie(lottie_transaction, height=200, width=200, key="cash transaction")
+        if uploaded_file:
+            transaction_ids, modified_data = load_and_clean_data(uploaded_file)
+            # st.write(modified_data)
+            model = load_model()
+            prediction = model.predict(modified_data).round().astype(int)
+            
+            original_data = pd.read_csv("original_data.csv")
 
-    if uploaded_file:
-        transaction_ids, modified_data = load_and_clean_data(uploaded_file)
-        st.write(modified_data)
-        model = load_model()
-        prediction = model.predict(modified_data).round().astype(int)
-        
-        original_data = pd.read_csv("original_data.csv")
-        # original_data = original_data.round(2)
-        # numeric_columns = original_data.select_dtypes(include=['float']).columns
-        # for column in numeric_columns:
-        #     original_data[column] = original_data[column].apply(lambda x: '{:.2f}'.format(x).rstrip('0').rstrip('.'))
-        # # original_data[numeric_columns] = original_data[numeric_columns].map('{:.2f}'.format)
-        original_data["Prediction"] = ["Fraud" if x == 1 else "Not Fraud" for x in prediction]
-        st.dataframe(original_data.style.apply(color_coding, axis=1), hide_index=True)
-        
-        fraud_count = np.sum(prediction)
-        not_fraud_count = len(prediction) - fraud_count
-        colors = ['#ff9999', '#66b3ff']
-        labels=['Fraud', 'Not Fraud']
-        fig1, ax1 = plt.subplots(figsize=(9,3))
-        ax1.pie([fraud_count, not_fraud_count], colors=colors, labels=labels, autopct='%1.1f%%', startangle=90)
-        ax1.axis('equal')
-        st.pyplot(fig1)
+            left_visualization,right_visualization = st.columns([2,1])
+            #---Visualizations---
+            with left_visualization:
+                data_visualizer = DataVisualizer(original_data)
+                data_visualizer.visualize_data()
 
-        transaction_ids = transaction_ids.tolist()
-        transaction_ids.insert(0, "-Select-")
-        transaction_id = st.selectbox("Transaction IDs", transaction_ids)
+            with right_visualization:
+                
+                
+                fraud_count = np.sum(prediction)
+                not_fraud_count = len(prediction) - fraud_count
+                colors = ['#ff9999', '#66b3ff']
+                labels=['Fraud', 'Not Fraud']
+                fig1, ax1 = plt.subplots(figsize=(3,3))
+                ax1.pie([fraud_count, not_fraud_count], colors=colors, labels=labels, autopct='%1.1f%%', startangle=90)
+                ax1.axis('equal')
+                st.pyplot(fig1)
 
-        if transaction_id != "-Select-":
-            idx = transaction_ids.index(transaction_id) - 1
-            if st.button("Explain"):
-                try:
-                    with st.spinner('Analyzing...'):
-                        response = generate_response(model, modified_data, idx, prediction[idx])
-                        # st.write(response)
-                        st.write_stream(stream_data(response))
-                except Exception as e:
-                    st.error(f"An error occurred: {e}")
-    else:
-        st.write("Select a file")
+            original_data["Prediction"] = ["Fraud" if x == 1 else "Not Fraud" for x in prediction]
+            st.dataframe(original_data.style.apply(color_coding, axis=1), hide_index=True)
+
+            transaction_ids = transaction_ids.tolist()
+            transaction_ids.insert(0, "-Select-")
+            transaction_id = st.selectbox("Transaction IDs", transaction_ids)
+
+            if transaction_id != "-Select-":
+                idx = transaction_ids.index(transaction_id) - 1
+                if st.button("Explain"):
+                    try:
+                        with st.spinner('Analyzing...'):
+                            response = generate_response(model, modified_data, idx, prediction[idx])
+                            st.write(response)
+                            # st.write_stream(stream_data(response))
+                    except Exception as e:
+                        st.error(f"An error occurred: {e}")
+        else:
+            st.write("Select a file")
+    with right_padding:
+        pass
 
 if __name__ == "__main__":
     main()

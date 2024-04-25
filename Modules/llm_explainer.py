@@ -15,12 +15,12 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 llm = ChatGoogleGenerativeAI(model="gemini-pro", convert_system_message_to_human=True)
 
 def generate_response(model, data, idx, prediction):
-    input_data = data.iloc[idx,:]
-    branch, amount, sender, sender_old_balance, sender_new_balance, receiver, receiver_old_balance, receiver_new_balance, transaction_count, account_age, last_transaction = input_data
+    input_data = data.iloc[idx,:].values.reshape(1, -1)
+    branch, amount, sender, sender_old_balance, sender_new_balance, receiver, receiver_old_balance, receiver_new_balance, transaction_count, account_age, last_transaction = input_data[0]
 
     explainer = shap.TreeExplainer(model)
     explanation = explainer(input_data)
-    shap_values = explanation.values
+    shap_values = explanation.values[:,:,prediction][0]
 
     branch_encoding, sender_encoding, receiver_encoding = get_encodings()
 
@@ -40,8 +40,8 @@ def generate_response(model, data, idx, prediction):
         - Receiver's Old Balance: {receiver_old_balance}
         - Receiver's New Balance: {receiver_new_balance}
         - Number of transactions made by sender: {transaction_count}
-        - Account's age: {account_age}
-        - Last transaction made by user: {last_transaction}
+        - Account's age: {account_age} in years
+        - Last transaction made by user: {last_transaction} in years
 
         Based on this information, the model provided its prediction that is {prediction}. 
         If the prediction value is 0, it indicates that no fraudulent activity is detected. 
@@ -61,7 +61,7 @@ def generate_response(model, data, idx, prediction):
         - Fraud Detection Analysis Report
         - Transcation Details (list all the parameters and their values)
         - Model Prediction
-        - SHAP Values Explanation (explain SHAP features that heavily contribute towards the decision and the inconsistencies in the sender and receiver account balances if any)
+        - SHAP Values Explanation (explain SHAP features in brief that heavily contribute towards the decision and the inconsistencies in the sender and receiver account balances if any)
         - Conclusion
     """
     prompt = ChatPromptTemplate.from_template(template)
@@ -81,5 +81,4 @@ def generate_response(model, data, idx, prediction):
                     "shap_values": shap_values,
                     "prediction": prediction
                 })
-    
     return response

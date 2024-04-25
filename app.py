@@ -54,7 +54,6 @@ def main():
         uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
         if uploaded_file:
             transaction_ids, modified_data = load_and_clean_data(uploaded_file)
-            # st.write(modified_data)
             model = load_model()
             prediction = model.predict(modified_data).round().astype(int)
             
@@ -63,25 +62,13 @@ def main():
             st.header("Results")
             original_data["Prediction"] = ["Fraud" if x == 1 else "Not Fraud" for x in prediction]
             st.dataframe(original_data.style.apply(color_coding, axis=1), hide_index=True)
+            fraud_percent = (np.sum(prediction) / len(prediction)) * 100
+            st.write(f"{fraud_percent} % of the transactions were fraudulent")
 
             st.header("Visualizations")
-            left_visualization,right_visualization = st.columns([2,1])
-            #---Visualizations---
-            with left_visualization:
-                data_visualizer = DataVisualizer(original_data)
-                data_visualizer.visualize_data()
-
-            with right_visualization:
-                st.write("Percent Fraudulent Transactions")
-                fraud_count = np.sum(prediction)
-                not_fraud_count = len(prediction) - fraud_count
-                colors = ['#ff9999', '#66b3ff']
-                labels=['Fraud', 'Not Fraud']
-                fig1, ax1 = plt.subplots(figsize=(3,3))
-                ax1.pie([fraud_count, not_fraud_count], colors=colors, labels=labels, autopct='%1.1f%%', startangle=90)
-                ax1.axis('equal')
-                st.pyplot(fig1)
-
+            data_visualizer = DataVisualizer(original_data)
+            data_visualizer.visualize_data()
+            
             st.header("Explainable AI")
             transaction_ids = transaction_ids.tolist()
             transaction_ids.insert(0, "-Select-")
@@ -93,12 +80,9 @@ def main():
                     try:
                         with st.spinner('Analyzing...'):
                             response = generate_response(model, modified_data, idx, prediction[idx])
-                            # st.write(response)
                             st.write_stream(stream_data(response))
                     except Exception as e:
                         st.error(f"An error occurred: {e}")
-        # else:
-        #     st.write("Select a file")
     with right_padding:
         pass
 

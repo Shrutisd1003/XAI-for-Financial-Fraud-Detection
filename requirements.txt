@@ -1,5 +1,6 @@
 streamlit
 streamlit_shap
+streamlit-lottie
 numpy
 xgboost
 shap
@@ -10,3 +11,5 @@ matplotlib
 langchain 
 langchain-openai 
 langchain-google-genai
+seaborn
+scikit-learn
